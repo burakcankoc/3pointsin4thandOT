@@ -1,36 +1,37 @@
 library(nbastatR)
 library(dplyr)
+library(gt)
 
-shots2014 <- teams_shots(teams = c(a$nameTeam), seasons = 2014)
-shots2015 <- teams_shots(teams = c(a$nameTeam), seasons = 2015)
-shots2016 <- teams_shots(teams = c(a$nameTeam), seasons = 2016)
-shots2017 <- teams_shots(teams = c(a$nameTeam), seasons = 2017)
-shots2018 <- teams_shots(teams = c(a$nameTeam), seasons = 2018)
-shots2019 <- teams_shots(teams = c(a$nameTeam), seasons = 2019)
-shots2020 <- teams_shots(teams = c(a$nameTeam), seasons = 2020)
+teamsnba = nba_teams() %>% 
+  filter(isNonNBATeam == 0)
+
+shots2014 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2014)
+shots2015 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2015)
+shots2016 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2016)
+shots2017 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2017)
+shots2018 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2018)
+shots2019 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2019)
+shots2020 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2020)
 shotss = rbind(shots2014, shots2015, shots2016, shots2017, shots2018, shots2019, shots2020)
 
-aaa = shotss %>% 
+df1 = shotss %>% 
   filter(numberPeriod > 3 & typeShot == "3PT Field Goal") %>% 
   group_by(namePlayer) %>%
   count() %>% 
   filter(n > 650)
 
-bbb = shotss %>% 
+df2 = shotss %>% 
   filter(namePlayer %in% aaa$namePlayer & numberPeriod > 3 & typeShot == "3PT Field Goal" & isShotMade == T) %>% 
   group_by(namePlayer) %>% 
   count()
 
-shotfg = left_join(bbb, aaa, by = "namePlayer")
+shotfg = left_join(df2, df1, by = "namePlayer")
 colnames(shotfg) = c("Player_Name", "FG3M", "FG3A")
 shotfg = shotfg %>% 
   mutate(FG3_PCT = FG3M/FG3A) %>% 
   arrange(desc(FG3A))
 
 shotfg$FG3_PCT = as.numeric(format(shotfg$FG3_PCT, digits = 3))
-str(shotfg$FG3_PCT)
-
-library(gt)
 
 gt_tbl = gt(tibble(shotfg))
 
