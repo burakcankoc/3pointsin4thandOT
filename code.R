@@ -1,5 +1,5 @@
 library(nbastatR)
-library(dplyr)
+library(tidyverse)
 library(gt)
 
 teamsnba = nba_teams() %>% 
@@ -12,7 +12,7 @@ shots2017 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2017)
 shots2018 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2018)
 shots2019 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2019)
 shots2020 <- teams_shots(teams = c(teamsnba$nameTeam), seasons = 2020)
-shotss = rbind(shots2014, shots2015, shots2016, shots2017, shots2018, shots2019, shots2020)
+shotss = bind_rows(shots2014, shots2015, shots2016, shots2017, shots2018, shots2019, shots2020)
 
 df1 = shotss %>% 
   filter(numberPeriod > 3 & typeShot == "3PT Field Goal") %>% 
@@ -21,11 +21,12 @@ df1 = shotss %>%
   filter(n > 650)
 
 df2 = shotss %>% 
-  filter(namePlayer %in% aaa$namePlayer & numberPeriod > 3 & typeShot == "3PT Field Goal" & isShotMade == T) %>% 
+  filter(namePlayer %in% df1$namePlayer & numberPeriod > 3 & typeShot == "3PT Field Goal" & isShotMade == T) %>% 
   group_by(namePlayer) %>% 
   count()
 
-shotfg = left_join(df2, df1, by = "namePlayer")
+shotfg = left_join(df2, df1, by = "namePlayer") %>% 
+  na.omit()
 colnames(shotfg) = c("Player_Name", "FG3M", "FG3A")
 shotfg = shotfg %>% 
   mutate(FG3_PCT = FG3M/FG3A) %>% 
@@ -73,6 +74,5 @@ gt_tbl <-
     style = cell_text(font = "BANGERS"),
     locations = cells_body(
       rows = T)
-  )
-
-gt_tbl
+  ) %>% 
+  gtsave("threesin4thandOT.png")
